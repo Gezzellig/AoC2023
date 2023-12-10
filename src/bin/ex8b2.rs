@@ -112,37 +112,51 @@ fn walk_over_array(lr_array: &Vec<usize>, walk_array: &[usize; OPTION_SIZE], mut
     }
     return 0;
 }
-
+#[derive(Debug)]
 struct Finish {
     i_step: usize,
     location: usize,
     steps_till_here: u64,
 }
 
+impl PartialEq for Finish {
+    fn eq(&self, other: &Finish) -> bool {
+        return self.i_step == other.i_step && self.location == other.location
+    }
+}
+
 fn find_cycles_with_finishes(lr_array: &Vec<usize>, walk_array: &[usize; OPTION_SIZE], start_position: usize) {
     let mut cur_loc = start_position;
-    let mut steps:u64 = 0;
-    let finishes Vec<(usize, >
+    let mut total_steps:u64 = 0;
+    let mut finishes: Vec<Finish> = Vec::new();
     loop {
         for i_step in 0..lr_array.len() {
             if is_finish(cur_loc) {
+                let cur_finish = Finish{i_step, location: cur_loc, steps_till_here: total_steps };
+                if let Some(old_finish) = finishes.iter().find(|f| **f==cur_finish) {
+                    println!("FOUND CYCLE");
+                    println!("old: {:?}", old_finish);
+                    println!("new: {:?}", cur_finish);
 
+                    // To get the answer calculate the Least common multiple of the different starting positions
+                    println!("need {} steps to get to cycle, and cycle takes {} steps", old_finish.steps_till_here, cur_finish.steps_till_here-old_finish.steps_till_here);
+                    println!("all finishes: {:?}", finishes);
+                    return;
+                    // TODO: calc cycle specs
+                }
+                finishes.push(cur_finish);
             }
-            println!("Going from {} taking {} to {}", cur_loc, step, walk_array[cur_loc + step]);
+            let step = lr_array[i_step];
+            // println!("Going from {} taking {} to {}", cur_loc, step, walk_array[cur_loc + step]);
             cur_loc = walk_array[cur_loc + step];
-            counter += 1;
+            total_steps += 1;
             // println!("{:?}, step: {}", positions, step);
-            if positions.iter().map(|&x| is_finish(x)).all(|x|x) {
-                return counter;
-            }
-            positions = positions.iter().map(|x|walk_array[x + step]).collect();
-
-            counter += 1;
         }
     }
 }
 
 fn main() {
+    // let filename = "8bsmall.in";
     let filename = "8.in";
     let binding = read_to_string(filename).unwrap();
     let mut lines = binding.lines();
@@ -152,10 +166,10 @@ fn main() {
     let start_positions = find_start_positions(&mut lines.clone());
     // let end_positions = find_end_positions(&mut lines);
     for start_pos in start_positions {
+        println!("calculating cycles for: {}", start_pos);
         find_cycles_with_finishes(&lr_array, &walk_array, start_pos)
     }
-    println!("{:?}", start_positions);
     // println!("{:?}", end_positions);
-    let result = walk_over_array(&lr_array, &walk_array, start_positions);
+    // let result = walk_over_array(&lr_array, &walk_array, start_positions);
     // println!("result: {}", result)
 }
